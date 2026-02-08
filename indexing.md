@@ -33,33 +33,3 @@ CREATE UNIQUE INDEX CONCURRENTLY IF NOT EXISTS idx_bookings_experience_user_conf
 ```
 
 This prevents race conditions where two concurrent requests could create two confirmed bookings for the same user/experience.
-
-## Index management — how to add/update indexes quickly
-
-- Create a new migration file in `migrations/` with a sequential prefix, e.g. `002_add_index_experiences_status_start_time.sql`.
-- At the top of the migration include a short comment explaining *why* the index is needed (what query pattern it accelerates).
-- Apply the migration with your normal migration tooling or `psql`:
-
-```bash
-psql "%DATABASE_URL%" -f migrations/002_add_index_experiences_status_start_time.sql
-```
-
-### Examples
-
-- `CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_experiences_status_start_time ON experiences (status, start_time);`
-  - Rationale: speeds up queries that list published experiences for a given time window (e.g. `WHERE status='published' AND start_time >= $1`).
-- `CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_bookings_user_id ON bookings (user_id);`
-  - Rationale: speeds up loading a user's booking history and counts for dashboards.
-
-### Best practices
-
-- Use `CONCURRENTLY` for creating/dropping indexes in production to avoid long table locks: `CREATE INDEX CONCURRENTLY ...` and `DROP INDEX CONCURRENTLY ...`.
-- Always include a plain-English comment at the top of the migration describing the query pattern, expected benefit, and any rollback steps.
-- Test the index with `EXPLAIN (ANALYZE, BUFFERS)` on representative queries before and after applying the index.
-- If an index isn't useful (low usage or high write overhead), drop it with `DROP INDEX CONCURRENTLY idx_name;` and record that action in a follow-up migration.
-
-### Naming convention
-
-Suggested naming: `idx_<table>_<col1>[_<col2>...]` — keeps names predictable and searchable.
-
-If you'd like I can add a sample migration file under `migrations/` for one of the above indexes.
