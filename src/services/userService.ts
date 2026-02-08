@@ -18,7 +18,7 @@ export async function findById(id: number): Promise<UserRecord | null> {
   return r.rows[0] ?? null;
 }
 
-export async function createUser(email: string, passwordHash: string, role: 'host'|'user') {
+export async function createUser(email: string, passwordHash: string, role: 'admin'|'host'|'user') {
   const r = await pool.query(
     'INSERT INTO users (email, password_hash, role) VALUES ($1,$2,$3) RETURNING id,email,role,created_at',
     [email, passwordHash, role]
