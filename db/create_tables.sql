@@ -53,4 +53,10 @@ CREATE INDEX IF NOT EXISTS idx_bookings_user_id ON bookings (user_id);
 -- c) If you run location-based searches, index `location` separately (text equality / prefix searches).
 CREATE INDEX IF NOT EXISTS idx_experiences_location ON experiences (location);
 
+-- Partial unique index to prevent duplicate confirmed bookings for same user/experience
+-- Recommended for production to avoid race conditions when creating confirmed bookings.
+CREATE UNIQUE INDEX CONCURRENTLY IF NOT EXISTS idx_bookings_experience_user_confirmed
+	ON bookings (experience_id, user_id)
+	WHERE status = 'confirmed';
+
 
